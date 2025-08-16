@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Diabetes Risk Prediction</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      background-color: #f9f9f9;
+    }
+
+    header {
+      background-color: #1976d2;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    main {
+      display: flex;
+      padding: 20px;
+    }
+
+    .input-section, .output-section {
+      flex: 1;
+      padding: 20px;
+    }
+
+    .input-section {
+      background-color: #ffffff;
+      border-right: 1px solid #ccc;
+    }
+
+    .output-section {
+      background-color: #f4f4f4;
+    }
+
+    h2 {
+      color: #333;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+    }
+
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      box-sizing: border-box;
+    }
+
+    .info {
+      font-size: 0.9em;
+      color: #666;
+    }
+
+    button {
+      background-color: #1976d2;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 10px;
+    }
+
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    .error {
+      color: red;
+      font-size: 0.9em;
+    }
+
+    #feedback, #personalAdvice, #generalTips {
+      margin-top: 20px;
+    }
+
+    ul {
+      padding-left: 20px;
+    }
+
+    section {
+      margin-top: 20px;
+      background-color: #fff;
+      padding: 15px;
+      border-radius: 5px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.05);
+    }
+
+    strong {
+      color: #1976d2;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Diabetes Risk Prediction</h1>
+    <h3>By: Neel Rao</h3>
+    <p>Diabetes is a global health issue affecting millions. Early identification and lifestyle changes can help reduce risk. We have created a machine learning model
+      that allows us to predict whether a person has diabetes based off their patient data. We built this model from <a href="https://www.kaggle.com/datasets/uciml/pima-indians-diabetes-database">
+        Kaggle Dataset</a> and trained on nearly 800 patient profiles to build our model. See training and model inside of our 
+        <a href = "https://colab.research.google.com/drive/15dxPE4-3SPp3OnE6148FO5_KaDytQtjq?usp=sharing">Google Collab Python notebook</a>.
+    </p>
+  </header>
+
+  <main>
+    <div class="input-section">
+      <h2>Enter Patient Details</h2>
+
+      <div id="form">
+        <div class="form-group">
+          <label for="pregnancies">Pregnancies</label>
+          <input type="number" id="pregnancies" min="0" max="20" />
+          <div class="info">Number of times pregnant (0-20)</div>
+        </div>
+
+        <div class="form-group">
+          <label for="glucose">Glucose</label>
+          <input type="number" id="glucose" min="50" max="300" />
+          <div class="info">Plasma glucose concentration (mg/dL) (50–300)</div>
+        </div>
+
+        <div class="form-group">
+          <label for="bloodPressure">Blood Pressure</label>
+          <input type="number" id="bloodPressure" min="30" max="180" />
+          <div class="info">Diastolic blood pressure (mm Hg) (30–180)</div>
+        </div>
+
+        <div class="form-group">
+          <label for="skinThickness">Skin Thickness</label>
+          <input type="number" id="skinThickness" min="0" max="100" />
+          <div class="info">Triceps skin fold thickness (mm) (0–100)</div>
+        </div>
+
+        <div class="form-group">
+          <label for="insulin">Insulin</label>
+          <input type="number" id="insulin" min="0" max="850" />
+          <div class="info">2-hour serum insulin (mu U/mL) (0–850)</div>
+        </div>
+
+        <div class="form-group">
+          <label for="bmi">BMI</label>
+          <input type="number" id="bmi" step="0.1" min="10" max="70" />
+          <div class="info">Body Mass Index (kg/m²) (10–70)</div>
+        </div>
+
+        <div class="form-group">
+          <label for="age">Age</label>
+          <input type="number" id="age" min="10" max="100" />
+          <div class="info">Age in years (10–100)</div>
+        </div>
+
+        <button id="predictBtn" onclick="getPrediction()" disabled>Predict</button>
+        <div id="validationError" class="error"></div>
+      </div>
+    </div>
+
+    <div class="output-section">
+      <h2>Prediction Result</h2>
+      <div id="predictionText"></div>
+
+      <section id="feedback"></section>
+      <section id="personalAdvice"></section>
+      <section id="generalTips">
+        <h3>General Diabetes Prevention Tips</h3>
+        <ul>
+          <li>Maintain a healthy weight and balanced diet</li>
+          <li>Exercise regularly (30 minutes daily)</li>
+          <li>Limit processed sugars and refined carbs</li>
+          <li>Get regular checkups and monitor blood sugar levels</li>
+          <li>Stay hydrated and get enough sleep</li>
+        </ul>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const inputIds = ['pregnancies', 'glucose', 'bloodPressure', 'skinThickness', 'insulin', 'bmi', 'age'];
+    const inputLimits = {
+      pregnancies: [0, 20],
+      glucose: [50, 300],
+      bloodPressure: [30, 180],
+      skinThickness: [0, 100],
+      insulin: [0, 850],
+      bmi: [10, 70],
+      age: [10, 100]
+    };
+
+    const averageValues = {
+      pregnancies: 3,
+      glucose: 120,
+      bloodPressure: 70,
+      skinThickness: 20,
+      insulin: 80,
+      bmi: 30,
+      age: 33
+    };
+
+    inputIds.forEach(id => {
+      document.getElementById(id).addEventListener('input', validateForm);
+    });
+
+    function validateForm() {
+      let allValid = true;
+      let errorMessage = "";
+
+      for (let id of inputIds) {
+        const input = document.getElementById(id);
+        const value = parseFloat(input.value);
+        const [min, max] = inputLimits[id];
+
+        if (isNaN(value)) {
+          allValid = false;
+        } else if (value < min || value > max) {
+          allValid = false;
+          errorMessage = `${id} must be between ${min} and ${max}.`;
+        }
+      }
+
+      document.getElementById('predictBtn').disabled = !allValid;
+      document.getElementById('validationError').textContent = errorMessage;
+    }
+
+    async function getPrediction() {
+      const features = inputIds.map(id => parseFloat(document.getElementById(id).value));
+
+      const response = await fetch('/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ features })
+      });
+
+      const result = await response.json();
+      const prediction = result.prediction[0];
+
+      // Prediction text
+      const predictionText = prediction === 1
+        ? "<strong style='color:red;'>High risk</strong>: You may be at a greater risk for diabetes. Please consult a healthcare provider."
+        : "<strong style='color:green;'>Low risk</strong>: You currently appear to have a lower risk for diabetes.";
+      document.getElementById('predictionText').innerHTML = predictionText;
+
+      // Feedback section
+      const feedback = [];
+      const personalAdvice = [];
+      inputIds.forEach((id, index) => {
+        const userVal = features[index];
+        const avgVal = averageValues[id];
+
+        if (userVal > avgVal * 1.2) {
+          feedback.push(`${id} is significantly <strong>higher</strong> than average.`);
+          personalAdvice.push(`Consider reducing your ${id} through diet or exercise.`);
+        } else if (userVal < avgVal * 0.8) {
+          feedback.push(`${id} is significantly <strong>lower</strong> than average.`);
+          personalAdvice.push(`Monitor your ${id}, as it is lower than expected.`);
+        }
+      });
+
+      document.getElementById('feedback').innerHTML = feedback.length
+        ? "<h3>Health Metric Feedback</h3><ul><li>" + feedback.join("</li><li>") + "</li></ul>"
+        : "<p>Your input values are within normal range.</p>";
+
+      document.getElementById('personalAdvice').innerHTML = personalAdvice.length
+        ? "<h3>Advice Based on Your Profile</h3><ul><li>" + personalAdvice.join("</li><li>") + "</li></ul>"
+        : "<p>No specific personal advice needed.</p>";
+    }
+  </script>
+</body>
+</html>
